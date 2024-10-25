@@ -1,17 +1,44 @@
 using Microsoft.Data.Sqlite;
 namespace tienda;
 
+/*
+Crear un repositorio llamado ProductoRepository para gestionar todas las
+operaciones relacionadas con Productos. Este repositorio debe incluir métodos para:
+● ----------Crear un nuevo Producto. (recibe un objeto Producto)
+● Modificar un Producto existente. (recibe un Id y un objeto Producto)
+● ----------Listar todos los Productos registrados. (devuelve un List de Producto)
+● Obtener detalles de un Productos por su ID. (recibe un Id y devuelve un
+Producto)
+● Eliminar un Producto por ID
+*/
 public class ProductoRepository
 {
     public string cadenaConexion = "Data Source=./../Tienda.db";
     public List<Producto> productos = new List<Producto>();
+
+    public void CrearProducto(Producto productoNuevo){
+        var queryString = $"INSERT INTO Productos (Descripcion,Precio) VALUES (@descripcion,@precio);";
+        using (SqliteConnection conexion = new SqliteConnection(cadenaConexion))
+        {
+            conexion.Open();
+            SqliteCommand comando = new SqliteCommand(queryString, conexion);
+
+            comando.Parameters.Add(new SqliteParameter("@descripcion",productoNuevo.Descripcion));
+            comando.Parameters.Add(new SqliteParameter("@precio",productoNuevo.Precio));
+
+            comando.ExecuteNonQuery();
+            conexion.Close();
+        }
+
+        productos.Add(productoNuevo);
+    }
     public List<Producto> GetProductos()
     {
         var queryString = @"SELECT * FROM Productos;";
         using (SqliteConnection conexion = new SqliteConnection(cadenaConexion))
         {
-            SqliteCommand comando = new SqliteCommand(queryString, conexion);
             conexion.Open();
+            SqliteCommand comando = new SqliteCommand(queryString, conexion);
             using (SqliteDataReader reader = comando.ExecuteReader())
             {
                 while (reader.Read())
