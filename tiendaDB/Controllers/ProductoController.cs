@@ -23,12 +23,51 @@ public class ProductoController : ControllerBase
     public IActionResult CrearProducto([FromBody] Producto producto)
     {
         productoRepositorio.CrearProducto(producto);
-        return Ok();
+
+        return Ok($"Producto creado con ID {producto.IdProducto}");
     }
+
+    // [HttpPut("ModificarProducto/{id}")]
+    // public IActionResult ModificarProducto(int id)
+    // {
+    //     // productoRepositorio.ModificarProducto(id);
+    //     return Ok();
+    // }
 
     [HttpGet("GetProductos")]
     public IActionResult GetProductos()
     {
+        if (productos.Count() == 0)
+        {
+            return NotFound("No hay productos");
+        }
+
         return Ok(productos);
+    }
+    
+    [HttpGet("ObtenerProducto/{id}")]
+    public IActionResult ObtenerProducto(int id)
+    {
+        if (productos.FirstOrDefault(p => p.IdProducto == id) == null)
+        {
+            return NotFound($"No se encontró el producto con ID {id}");
+        }
+
+        Producto producto = productoRepositorio.ObtenerProducto(id);
+
+        return Ok(producto);
+    }
+    
+    [HttpDelete("EliminarProducto/{id}")]
+    public IActionResult EliminarProducto(int id)
+    {
+        if (productos.FirstOrDefault(p => p.IdProducto == id) == null)
+        {
+            return NotFound($"El producto con ID {id} no existe");
+        }
+        
+        productoRepositorio.EliminarProducto(id);
+        
+        return Ok($"Producto eliminado: ID {id}");
     }
 }

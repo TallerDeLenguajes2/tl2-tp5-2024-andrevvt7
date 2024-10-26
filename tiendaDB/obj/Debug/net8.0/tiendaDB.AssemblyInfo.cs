@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("tiendaDB")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+54f9a069639f3f04c3fbe3a559430a029688a823")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+0743db66dc8f1edce65313ff3b85cd24d9ce31f1")]
 [assembly: System.Reflection.AssemblyProductAttribute("tiendaDB")]
 [assembly: System.Reflection.AssemblyTitleAttribute("tiendaDB")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
