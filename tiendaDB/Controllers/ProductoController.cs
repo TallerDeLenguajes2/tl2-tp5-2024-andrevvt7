@@ -27,12 +27,18 @@ public class ProductoController : ControllerBase
         return Ok($"Producto creado con ID {producto.IdProducto}");
     }
 
-    // [HttpPut("ModificarProducto/{id}")]
-    // public IActionResult ModificarProducto(int id)
-    // {
-    //     // productoRepositorio.ModificarProducto(id);
-    //     return Ok();
-    // }
+    [HttpPut("ModificarProducto/{id}")]
+    public IActionResult ModificarProducto(int id, [FromBody]Producto producto)
+    {
+        if (productos.FirstOrDefault(p => p.IdProducto == id) == null)
+        {
+            return NotFound($"No se encontró el producto con ID {id}");
+        }
+
+        productoRepositorio.ModificarProducto(id, producto);
+        
+        return Ok($"Producto {id} modificado.");
+    }
 
     [HttpGet("GetProductos")]
     public IActionResult GetProductos()
