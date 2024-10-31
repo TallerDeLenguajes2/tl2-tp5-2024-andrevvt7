@@ -7,16 +7,16 @@ public class Presupuesto{
 
     public int IdPresupuesto { get => idPresupuesto; set => idPresupuesto = value; }
     public string? NombreDestinatario { get => nombreDestinatario; set => nombreDestinatario = value; }
-    public List<PresupuestoDetalle>? Detalle { get => detalle; }
+    public List<PresupuestoDetalle>? Detalle { get => detalle; set => detalle = value; }
 
-    Presupuesto(){
-        detalle = new List<PresupuestoDetalle>();
+    public Presupuesto(){
+        Detalle = new List<PresupuestoDetalle>();
     }
     public void AgregarProducto(Producto producto, int cantidad){
         PresupuestoDetalle presupuestoDetalleNuevo = new PresupuestoDetalle();
         presupuestoDetalleNuevo.CargarProducto(producto);
         presupuestoDetalleNuevo.Cantidad = cantidad;
-        detalle.Add(presupuestoDetalleNuevo);
+        Detalle.Add(presupuestoDetalleNuevo);
     }
 
     public int MontoPresupuesto(){
