@@ -4,15 +4,15 @@ namespace tienda;
 /*
 ● --------Crear un nuevo Presupuesto. (recibe un objeto Presupuesto)
 ● --------Listar todos los Presupuestos registrados. (devuelve un List de Presupuestos)
-● --------Obtener detalles de un Presupuesto por su ID. (recibe un Id y devuelve un
-Producto)
+● --------Obtener detalles de un Presupuesto por su ID. (recibe un Id y devuelve un Producto)
 ● --------Eliminar un Presupuesto por ID
 */
 
 public class PresupuestoRepository
 {
     public string cadenaConexion = "Data Source=./../Tienda.db";
-    public List<Presupuesto> presupuestos = new List<Presupuesto>();
+    public List<Presupuesto> presupuestosCompleto = new List<Presupuesto>();
+    public List<Presupuesto> presupuestosSinDetalles = new List<Presupuesto>();
 
     public void CrearPresupuesto(Presupuesto presupuestoNuevo)
     {
@@ -29,71 +29,87 @@ public class PresupuestoRepository
             conexion.Close();
         }
 
-        presupuestos.Add(presupuestoNuevo);
+        presupuestosCompleto.Add(presupuestoNuevo);
+        presupuestosSinDetalles.Add(presupuestoNuevo);
     }
 
-    public List<Presupuesto> GetPresupuestos()
+public List<Presupuesto> GetPresupuestosSinDetalles()
     {
-        var queryString = @"SELECT * FROM Presupuestos;";
+        var consultaGeneral = @"SELECT * FROM Presupuestos;";
         using (SqliteConnection conexion = new SqliteConnection(cadenaConexion))
         {
             conexion.Open();
-            SqliteCommand comando = new SqliteCommand(queryString, conexion);
+            SqliteCommand comandoGeneral = new SqliteCommand(consultaGeneral, conexion);
 
-            using (SqliteDataReader reader = comando.ExecuteReader())
+            using (SqliteDataReader reader = comandoGeneral.ExecuteReader())
             {
                 while (reader.Read())
                 {
-                    presupuestos.Add(ObtenerPresupuesto(Convert.ToInt32(reader["idPresupuesto"])));
+                    Presupuesto presupuesto = new Presupuesto();
+                    presupuesto.IdPresupuesto = Convert.ToInt32(reader["idPresupuesto"]);
+                    presupuesto.NombreDestinatario = reader["NombreDestinatario"].ToString();
+                    presupuestosSinDetalles.Add(presupuesto);
                 }
+            }
+
+            conexion.Close();
+        }
+
+        return presupuestosSinDetalles;
+    }
+
+    public List<Presupuesto> GetPresupuestosCompleto()
+    {
+        var consultaGeneral = @"SELECT * FROM Presupuestos;";
+        var consultaConProductos = @"SELECT * FROM Presupuestos LEFT JOIN PresupuestosDetalle ON Presupuestos.idPresupuesto = PresupuestosDetalle.idPresupuesto INNER JOIN Productos ON PresupuestosDetalle.idProducto = Productos.idProducto ORDER BY Presupuestos.idPresupuesto;";
+        using (SqliteConnection conexion = new SqliteConnection(cadenaConexion))
+        {
+            conexion.Open();
+            SqliteCommand comandoGeneral = new SqliteCommand(consultaGeneral, conexion);
+            SqliteCommand comandoConProductos = new SqliteCommand(consultaConProductos, conexion);
+
+            using (SqliteDataReader reader = comandoGeneral.ExecuteReader())
+            {
+                while (reader.Read())
+                {
+                    Presupuesto presupuesto = new Presupuesto();
+                    presupuesto.IdPresupuesto = Convert.ToInt32(reader["idPresupuesto"]);
+                    presupuesto.NombreDestinatario = reader["NombreDestinatario"].ToString();
+                    presupuestosCompleto.Add(presupuesto);
+                }
+            }
+
+            using (SqliteDataReader reader = comandoConProductos.ExecuteReader())
+            {
+                while (reader.Read())
+                {
+                    Presupuesto? presupuesto = presupuestosCompleto.FirstOrDefault(p => p.IdPresupuesto == Convert.ToInt32(reader["idPresupuesto"]));
+                    Producto producto = new Producto();
+                    producto.IdProducto = Convert.ToInt32(reader["idProducto"]);
+                    producto.Descripcion = reader["Descripcion"].ToString();
+                    producto.Precio = Convert.ToInt32(reader["Precio"]);
+                    presupuesto.AgregarProducto(producto, Convert.ToInt32(reader["Cantidad"]));
+                }
+
             }
             conexion.Close();
         }
 
-        return presupuestos;
+        return presupuestosCompleto;
     }
 
-    public Presupuesto ObtenerPresupuesto(int idPresupuesto)
-    {
-        Presupuesto presupuesto = new Presupuesto();
-        var queryString = $"SELECT * FROM Presupuestos WHERE idPresupuesto=@idP;";
-        var queryString2 = @"SELECT * FROM PresupuestosDetalle WHERE idPresupuesto = @idPresupuesto;;";
+    public Presupuesto ObtenerPresupuesto(int idPresupuesto){
+        Presupuesto? presupuesto = presupuestosCompleto.FirstOrDefault(p => p.IdPresupuesto == idPresupuesto);
 
-        using (SqliteConnection conexion = new SqliteConnection(cadenaConexion))
-        {
-            conexion.Open();
-            SqliteCommand comando = new SqliteCommand(queryString, conexion);
-
-            comando.Parameters.Add(new SqliteParameter("@idP", idPresupuesto));
-
-            using (SqliteDataReader reader = comando.ExecuteReader())
-            {
-                while (reader.Read())
-                {
-                    presupuesto.IdPresupuesto = Convert.ToInt32(reader["idPresupuesto"]);
-                    presupuesto.NombreDestinatario = reader["NombreDestinatario"].ToString();
-
-                    SqliteCommand comando2 = new SqliteCommand(queryString2, conexion);
-                    comando2.Parameters.Add(new SqliteParameter("@idPresupuesto", presupuesto.IdPresupuesto));
-
-                    using (SqliteDataReader reader2 = comando2.ExecuteReader())
-                    {
-                        ProductoRepository repoProductos = new ProductoRepository();
-                        List<Producto> productos = repoProductos.GetProductos();
-                        while (reader2.Read())
-                        {
-                            presupuesto.AgregarProducto(productos.FirstOrDefault(p => p.IdProducto == Convert.ToInt32(reader2["idProducto"])), Convert.ToInt32(reader2["cantidad"]));
-                        }
-                    }
-                }
-
-                conexion.Close();
-            }
-
-            return presupuesto;
-        }
+        return presupuesto;
     }
+    
+    public List<PresupuestoDetalle> DetallesPresupuesto(int idPresupuesto){
+        List<PresupuestoDetalle> detalle = ObtenerPresupuesto(idPresupuesto).Detalle;
 
+        return detalle;
+    }
+   
     public void AgregarDetalle(int idPresupuesto, PresupuestoDetalle presupuestoDetalle)
     {
         var queryString = $"INSERT INTO PresupuestosDetalle (idPresupuesto,idProducto,Cantidad) VALUES (@idPresupuesto,@idProducto,@cantidad);";
@@ -111,8 +127,6 @@ public class PresupuestoRepository
         }
     }
 
-
-    //______________________________________________________________________________________________
     public void EliminarPresupuesto(int idPresupuesto)
     {
         var queryString = $"DELETE FROM PresupuestosDetalle WHERE idPresupuesto=@idP;";

@@ -13,13 +13,15 @@ y una cantidad al presupuesto.
 public class PresupuestoController : ControllerBase
 {
     List<Presupuesto> presupuestos;
+    List<Presupuesto> presupuestosSinDetalles;
     List<Producto> productos;
     PresupuestoRepository presupestoRepositorio = new PresupuestoRepository();
     ProductoRepository productoRepositorio = new ProductoRepository();
 
     public PresupuestoController()
     {
-        presupuestos = presupestoRepositorio.GetPresupuestos();
+        presupuestos = presupestoRepositorio.GetPresupuestosCompleto();
+        presupuestosSinDetalles = presupestoRepositorio.GetPresupuestosSinDetalles();
         productos = productoRepositorio.GetProductos();
     }
 
@@ -49,8 +51,8 @@ public class PresupuestoController : ControllerBase
         return Ok($"Detalle agregado al presupuesto {idPresupuesto}");
     }
 
-    [HttpGet("Getpresupuestos")]
-    public IActionResult Getpresupuestos()
+    [HttpGet("GetPresupuestosCompleto")]
+    public IActionResult GetPresupuestosCompleto()
     {
         if (presupuestos.Count() == 0)
         {
@@ -58,6 +60,44 @@ public class PresupuestoController : ControllerBase
         }
 
         return Ok(presupuestos);
+    }
+
+    [HttpGet("GetPresupuestosSinDetalles")]
+    public IActionResult GetPresupuestosSinDetalles()
+    {
+        if (presupuestosSinDetalles.Count() == 0)
+        {
+            return NotFound("No hay presupuestos");
+        }
+
+        return Ok(presupuestosSinDetalles);
+    }
+    
+    [HttpGet("ObtenerPresupuesto/{idPresupuesto}")]
+    public IActionResult ObtenerPresupuesto(int idPresupuesto)
+    {
+       if (presupuestos.FirstOrDefault(p => p.IdPresupuesto == idPresupuesto) == null)
+        {
+            return NotFound($"No se encontró el presupuesto con ID {idPresupuesto}");
+        }
+
+        Presupuesto presupuesto = presupestoRepositorio.ObtenerPresupuesto(idPresupuesto);
+
+        return Ok(presupuesto);
+    }
+    
+    
+    [HttpGet("ObtenerDetallesDePresupuesto/{idPresupuesto}")]
+    public IActionResult ObtenerDetallesDePresupuesto(int idPresupuesto)
+    {
+       if (presupuestos.FirstOrDefault(p => p.IdPresupuesto == idPresupuesto) == null)
+        {
+            return NotFound($"No se encontró el presupuesto con ID {idPresupuesto}");
+        }
+
+        List<PresupuestoDetalle> detalles = presupestoRepositorio.DetallesPresupuesto(idPresupuesto);
+
+        return Ok(detalles);
     }
     
 
